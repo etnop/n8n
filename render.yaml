@@ -1,0 +1,60 @@
+services:
+  - type: web
+    name: n8n
+    env: docker
+    repo: https://github.com/n8n-io/n8n
+    plan: starter
+    region: oregon
+    branch: master
+    dockerfilePath: ./docker/images/n8n/Dockerfile
+    envVars:
+      - key: N8N_BASIC_AUTH_ACTIVE
+        value: "true"
+      - key: N8N_BASIC_AUTH_USER
+        value: "admin"
+      - key: N8N_BASIC_AUTH_PASSWORD
+        value: "yourStrongPassword"
+      - key: DB_TYPE
+        value: postgresdb
+      - key: DB_POSTGRESDB_HOST
+        fromService:
+          type: pserv
+          name: n8n-db
+      - key: DB_POSTGRESDB_PORT
+        value: "5432"
+      - key: DB_POSTGRESDB_DATABASE
+        value: n8n
+      - key: DB_POSTGRESDB_USER
+        value: n8n
+      - key: DB_POSTGRESDB_PASSWORD
+        fromSecret: n8n-db-password
+      - key: GENERIC_TIMEZONE
+        value: Europe/Lisbon
+      - key: N8N_HOST
+        value: your-subdomain.onrender.com
+      - key: N8N_PORT
+        value: "5678"
+      - key: N8N_PROTOCOL
+        value: https
+    disk:
+      name: n8n-data
+      mountPath: /home/node/.n8n
+      sizeGB: 1
+
+  - type: pserv
+    name: n8n-db
+    env: docker
+    plan: starter
+    dockerfilePath: "" # default Postgres image
+    image: postgres:15
+    envVars:
+      - key: POSTGRES_USER
+        value: n8n
+      - key: POSTGRES_PASSWORD
+        fromSecret: n8n-db-password
+      - key: POSTGRES_DB
+        value: n8n
+    disk:
+      name: postgres-data
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 1
